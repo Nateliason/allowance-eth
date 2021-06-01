@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 import { Button, Input, Container, Grid, Menu, Card } from 'semantic-ui-react'
 import Allowance from './artifacts/contracts/Allowance.sol/Allowance.json';
 
-const allowanceAddress = "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853";
+const allowanceAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
 function App() {
   // Use hooks to set all of the state variables
@@ -19,6 +19,18 @@ function App() {
   async function requestAccount() {
     const [account] = await window.ethereum.request({ method: 'eth_requestAccounts' });
     return account
+  }
+
+  async function fundAccount() {
+    if (typeof window.ethereum !== 'undefined') {
+      const provider = new ethers.providers.Web3Provider(window.ethereum)
+      const signer = provider.getSigner();
+      const transaction = await signer.sendTransaction({
+        to: allowanceAddress,
+        value: ethers.utils.parseEther(allowanceAmount)
+      });
+      await transaction.wait();
+    }
   }
 
   async function getAddress() {
@@ -54,7 +66,7 @@ function App() {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const contract = new ethers.Contract(allowanceAddress, Allowance.abi, provider);
       const contBalance = await contract.seeBalance();
-      setBalance(contBalance.toString());
+      setBalance(ethers.utils.formatUnits(contBalance.toString(), "ether"));
     }
   }
 
@@ -63,7 +75,7 @@ function App() {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
       const contract = new ethers.Contract(allowanceAddress, Allowance.abi, signer);
-      const transaction = await contract.setAllowance(allowanceTarget, allowanceAmount);
+      const transaction = await contract.setAllowance(allowanceTarget, ethers.utils.parseEther(allowanceAmount));
     }
   }
 
@@ -73,7 +85,7 @@ function App() {
       const signer = provider.getSigner();
       const contract = new ethers.Contract(allowanceAddress, Allowance.abi, signer);
       const transaction = await contract.allowanceAmount(allowanceTarget);
-      setAddressAllowance(transaction.toString());
+      setAddressAllowance(ethers.utils.formatUnits(transaction.toString(), "ether"));
     }
   }
 
@@ -82,7 +94,7 @@ function App() {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
       const contract = new ethers.Contract(allowanceAddress, Allowance.abi, signer);
-      const transaction = await contract.addAllowance(allowanceTarget, allowanceAmount);
+      const transaction = await contract.addAllowance(allowanceTarget, ethers.utils.parseEther(allowanceAmount));
     }
   }
 
@@ -91,7 +103,7 @@ function App() {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
       const contract = new ethers.Contract(allowanceAddress, Allowance.abi, signer);
-      const transaction = await contract.withdrawAllowance(allowanceAmount);
+      const transaction = await contract.withdrawAllowance(ethers.utils.parseEther(allowanceAmount));
     }
   }
 
@@ -158,7 +170,7 @@ function App() {
                   <h2>Execute Contract Functions</h2>
                   <div class="button-group">
                     <p class="button-description">Add money to the contract, to allocate to allowances</p>
-                    <Button primary onClick={depositFunds}>Deposit Funds</Button>
+                    <Button primary onClick={fundAccount}>Deposit Funds</Button>
                   </div>
                   <div class="button-group">
                     <p class="button-description">See the total balance of the contract, including allowances</p>
